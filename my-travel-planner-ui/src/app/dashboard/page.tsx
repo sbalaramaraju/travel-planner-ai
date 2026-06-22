@@ -34,7 +34,7 @@ export default function DashboardPage() {
   const interestsOptions = ["Food", "Culture", "Adventure", "Shopping", "Nature", "Nightlife"];
 
   const getApiUrl = (endpoint: string) => {
-    const baseUrl = (typeof window !== "undefined" ? (window as any).env?.VITE_API_URL : null) || "/api";
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || (typeof window !== "undefined" ? (window as any).env?.VITE_API_URL : null) || "/api";
     return `${baseUrl.replace(/\/$/, "")}${endpoint}`;
   };
 

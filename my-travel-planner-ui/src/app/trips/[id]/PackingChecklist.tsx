@@ -23,7 +23,7 @@ export default function PackingChecklist({ trip, token }: PackingChecklistProps)
   const [newItemCategory, setNewItemCategory] = useState<PackingItem["category"]>("Other");
 
   const getApiUrl = (endpoint: string) => {
-    const baseUrl = (typeof window !== "undefined" ? (window as any).env?.VITE_API_URL : null) || "/api";
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || (typeof window !== "undefined" ? (window as any).env?.VITE_API_URL : null) || "/api";
     return `${baseUrl.replace(/\/$/, "")}${endpoint}`;
   };
 
