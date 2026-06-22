@@ -10,6 +10,60 @@ import {
 } from "lucide-react";
 import { Trip, AuthUser } from "../../types";
 
+function formatFriendlyError(errorMsg: string): string {
+  if (!errorMsg) return "An unexpected error occurred. Please try again.";
+
+  try {
+    const jsonStartIdx = errorMsg.indexOf("{");
+    if (jsonStartIdx !== -1) {
+      const potentialJson = errorMsg.substring(jsonStartIdx);
+      const parsed = JSON.parse(potentialJson);
+      
+      const innerMessage = 
+        parsed.error?.message || 
+        parsed.message || 
+        (parsed.error && typeof parsed.error === "string" ? parsed.error : null);
+        
+      if (innerMessage) {
+        errorMsg = innerMessage;
+      }
+    }
+  } catch (e) {
+    // Fall back to clean up regex search if parsing failed
+    if (errorMsg.includes('{"error":')) {
+      const match = errorMsg.match(/"message"\s*:\s*"([^"]+)"/);
+      if (match && match[1]) {
+        errorMsg = match[1];
+      }
+    }
+  }
+
+  const lowerMsg = errorMsg.toLowerCase();
+  
+  if (lowerMsg.includes("high demand") || lowerMsg.includes("unavailable") || lowerMsg.includes("503") || lowerMsg.includes("busy")) {
+    return "The AI system is currently experiencing high demand and is temporarily busy. Please wait a few seconds and try again.";
+  }
+  if (lowerMsg.includes("api_key") || lowerMsg.includes("api key") || lowerMsg.includes("api-key")) {
+    return "Configuration Error: The system's Gemini API key is missing or invalid. Please configure the GEMINI_API_KEY environment variable.";
+  }
+  if (lowerMsg.includes("quota") || lowerMsg.includes("limit") || lowerMsg.includes("429") || lowerMsg.includes("too many requests")) {
+    return "The AI rate limit has been reached. Please wait a minute before requesting another travel plan.";
+  }
+  if (lowerMsg.includes("timeout") || lowerMsg.includes("deadline")) {
+    return "The AI request timed out. Please try generating again with different parameters or during off-peak times.";
+  }
+  if (lowerMsg.includes("fetch failed") || lowerMsg.includes("network") || lowerMsg.includes("conn")) {
+    return "Unable to communicate with the server. Please check your network connection and try again.";
+  }
+
+  let displayMsg = errorMsg;
+  if (displayMsg.startsWith("Failed to generate travel plan: ")) {
+    displayMsg = displayMsg.replace("Failed to generate travel plan: ", "");
+  }
+  
+  return `Failed to generate travel plan: ${displayMsg}`;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
@@ -142,7 +196,7 @@ export default function DashboardPage() {
       // Navigate to the newly generated card
       router.push(`/trips/${data.trip._id}`);
     } catch (err: any) {
-      setError(err.message || "An error occurred calling Gemini API.");
+      setError(formatFriendlyError(err.message || "An error occurred calling Gemini API."));
       setGenerating(false);
     }
   };
