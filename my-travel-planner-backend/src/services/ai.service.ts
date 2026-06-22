@@ -84,7 +84,7 @@ export class AIService {
                   type: Type.OBJECT,
                   properties: {
                     title: { type: Type.STRING, description: "Name of the activity (e.g., Travel journey, Museum visit)" },
-                    description: { type: String, description: "Highly engaging overview of what to do, factoring transport schedules and timing logistics" },
+                    description: { type: Type.STRING, description: "Highly engaging overview of what to do, factoring transport schedules and timing logistics" },
                     estimatedCost: {
                       type: Type.OBJECT,
                       properties: {
