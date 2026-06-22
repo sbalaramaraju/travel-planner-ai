@@ -339,7 +339,7 @@ export default function TripDetailPage() {
                                 <p className="text-xs text-slate-500 leading-relaxed">{act.description}</p>
                                 <div className="text-xs font-bold text-slate-400 font-mono mt-1 pt-1.5 flex items-center gap-1">
                                   <DollarSign className="w-3.5 h-3.5 text-slate-400" />
-                                  Estimated: ${act.estimatedCost.min} - ${act.estimatedCost.max} USD
+                                  Estimated: {trip.currencySymbol || "$"}{act.estimatedCost.min} - {trip.currencySymbol || "$"}{act.estimatedCost.max} {trip.currencyCode || "USD"}
                                 </div>
                               </div>
                             </div>
@@ -385,8 +385,13 @@ export default function TripDetailPage() {
           {/* TAB 3: ESTIMATED BUDGET TABLES COST */}
           {activeTab === "budget" && (
             <div className="space-y-6" id="budget-tab-content">
-              <h2 className="text-lg font-bold text-slate-800">Estimated Project Cost Tables</h2>
-              <p className="text-xs text-slate-500">All estimates are represented in USD based on standard live pricing index parameters.</p>
+              <div className="flex items-center justify-between gap-4 pb-2 border-b border-slate-200">
+                <h2 className="text-lg font-bold text-slate-800">Estimated Project Cost Tables</h2>
+                <span className="text-[11px] font-medium text-slate-400/90 lowercase tracking-normal font-sans italic self-end shrink-0">
+                  * estimates per person
+                </span>
+              </div>
+              <p className="text-xs text-slate-500">All estimates are represented in {trip.currencyCode || "USD"} based on standard live pricing index parameters.</p>
 
               <div className="border border-slate-200 rounded-xl overflow-hidden shadow-xs pt-1">
                 <table className="w-full text-left text-sm border-collapse" id="budget-comparison-table">
@@ -400,28 +405,28 @@ export default function TripDetailPage() {
                   <tbody className="divide-y divide-slate-100 text-slate-500">
                     <tr>
                       <td className="p-4 font-bold text-slate-800">Outgoing/Returning Flights</td>
-                      <td className="p-4 font-mono font-bold text-slate-700">${trip.budgetEstimate.flights.min} USD</td>
-                      <td className="p-4 font-mono font-bold text-slate-700">${trip.budgetEstimate.flights.max} USD</td>
+                      <td className="p-4 font-mono font-bold text-slate-700">{trip.currencySymbol || "$"}{trip.budgetEstimate.flights.min} {trip.currencyCode || "USD"}</td>
+                      <td className="p-4 font-mono font-bold text-slate-700">{trip.currencySymbol || "$"}{trip.budgetEstimate.flights.max} {trip.currencyCode || "USD"}</td>
                     </tr>
                     <tr>
                       <td className="p-4 font-bold text-slate-800">Selected Lodging/Hotels</td>
-                      <td className="p-4 font-mono font-bold text-slate-700">${trip.budgetEstimate.accommodation.min} USD</td>
-                      <td className="p-4 font-mono font-bold text-slate-700">${trip.budgetEstimate.accommodation.max} USD</td>
+                      <td className="p-4 font-mono font-bold text-slate-700">{trip.currencySymbol || "$"}{trip.budgetEstimate.accommodation.min} {trip.currencyCode || "USD"}</td>
+                      <td className="p-4 font-mono font-bold text-slate-700">{trip.currencySymbol || "$"}{trip.budgetEstimate.accommodation.max} {trip.currencyCode || "USD"}</td>
                     </tr>
                     <tr>
                       <td className="p-4 font-bold text-slate-800">Food, Drinks & Local Dining</td>
-                      <td className="p-4 font-mono font-bold text-slate-700">${trip.budgetEstimate.food.min} USD</td>
-                      <td className="p-4 font-mono font-bold text-slate-700">${trip.budgetEstimate.food.max} USD</td>
+                      <td className="p-4 font-mono font-bold text-slate-700">{trip.currencySymbol || "$"}{trip.budgetEstimate.food.min} {trip.currencyCode || "USD"}</td>
+                      <td className="p-4 font-mono font-bold text-slate-700">{trip.currencySymbol || "$"}{trip.budgetEstimate.food.max} {trip.currencyCode || "USD"}</td>
                     </tr>
                     <tr>
                       <td className="p-4 font-bold text-slate-800">Daily Sightseeing/Activities</td>
-                      <td className="p-4 font-mono font-bold text-slate-700">${trip.budgetEstimate.activities.min} USD</td>
-                      <td className="p-4 font-mono font-bold text-slate-700">${trip.budgetEstimate.activities.max} USD</td>
+                      <td className="p-4 font-mono font-bold text-slate-700">{trip.currencySymbol || "$"}{trip.budgetEstimate.activities.min} {trip.currencyCode || "USD"}</td>
+                      <td className="p-4 font-mono font-bold text-slate-700">{trip.currencySymbol || "$"}{trip.budgetEstimate.activities.max} {trip.currencyCode || "USD"}</td>
                     </tr>
                     <tr className="bg-slate-50/60 font-bold border-t border-slate-200">
                       <td className="p-4 text-slate-900 font-extrabold uppercase tracking-wide bg-slate-50">Total Outgoing Estimate</td>
-                      <td className="p-4 text-indigo-700 font-mono font-extrabold text-base bg-slate-50">${trip.budgetEstimate.total.min} USD</td>
-                      <td className="p-4 text-indigo-700 font-mono font-extrabold text-base bg-slate-50">${trip.budgetEstimate.total.max} USD</td>
+                      <td className="p-4 text-indigo-700 font-mono font-extrabold text-base bg-slate-50">{trip.currencySymbol || "$"}{trip.budgetEstimate.total.min} {trip.currencyCode || "USD"}</td>
+                      <td className="p-4 text-indigo-700 font-mono font-extrabold text-base bg-slate-50">{trip.currencySymbol || "$"}{trip.budgetEstimate.total.max} {trip.currencyCode || "USD"}</td>
                     </tr>
                   </tbody>
                 </table>
