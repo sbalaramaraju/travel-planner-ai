@@ -21,6 +21,46 @@ function getAiClient(): GoogleGenAI {
   return aiClient;
 }
 
+async function callGeminiWithRetry(
+  ai: any,
+  model: string,
+  contents: any,
+  config: any,
+  maxRetries = 3,
+  delayMs = 1500
+): Promise<any> {
+  let attempt = 0;
+  while (true) {
+    try {
+      return await ai.models.generateContent({
+        model,
+        contents,
+        config,
+      });
+    } catch (err: any) {
+      attempt++;
+      const status = err?.status || "";
+      const message = err?.message || String(err);
+      const isTransient =
+        status === "UNAVAILABLE" ||
+        status === "RESOURCE_EXHAUSTED" ||
+        message.includes("503") ||
+        message.includes("429") ||
+        message.includes("high demand") ||
+        message.includes("rate limit") ||
+        message.includes("quota");
+
+      if (isTransient && attempt <= maxRetries) {
+        const backoff = delayMs * Math.pow(2, attempt - 1);
+        console.warn(`Gemini API transient failure (status: ${status}, attempt ${attempt}/${maxRetries}). Retrying in ${backoff}ms... Error: ${message}`);
+        await new Promise((resolve) => setTimeout(resolve, backoff));
+        continue;
+      }
+      throw err;
+    }
+  }
+}
+
 export interface GenerationInput {
   origin: string;
   destination: string;
@@ -155,39 +195,23 @@ export class AIService {
 
     try {
       let text = "";
-      try {
-      const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
-        contents: prompt,
-        config: {
-          systemInstruction: "You are a professional world-travel consultant. Use Google Search grounding to perform research on actual transit paths, fares, hotel rates, and sightseeing prices to build hyper-accurate and realistic estimates. Generate precise JSON that matches the required responseSchema perfectly.",
+      const response = await callGeminiWithRetry(
+        ai,
+        "gemini-3.5-flash",
+        prompt,
+        {
+          systemInstruction: "You are a professional world-travel consultant. Rely on your vast internal knowledge base to perform accurate estimations on actual transit paths, fares, hotel rates, and sightseeing prices to build hyper-accurate and realistic estimates. Generate precise JSON that matches the required responseSchema perfectly.",
           responseMimeType: "application/json",
           responseSchema,
-          tools: [{ googleSearch: {} }],
-        },
-      });
+        }
+      );
       text = response.text || "";
-    } catch (groundingError: any) {
-      const errMsg = groundingError?.message || String(groundingError);
-      console.warn("Google Search Grounding experienced an error or quota limit. Falling back to standard generation for reliability:", errMsg);
-      
-      const fallbackResponse = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
-        contents: prompt,
-        config: {
-          systemInstruction: "You are a professional world-travel consultant. Rely on your vast knowledge base to build highly accurate, realistic, and consistent estimates. Generate precise JSON that matches the required responseSchema perfectly.",
-          responseMimeType: "application/json",
-          responseSchema,
-        },
-      });
-      text = fallbackResponse.text || "";
-    }
 
-    if (!text) {
-      throw new Error("Empty response received from travel planner AI");
-    }
+      if (!text) {
+        throw new Error("Empty response received from travel planner AI");
+      }
 
-    const generatedData = JSON.parse(text);
+      const generatedData = JSON.parse(text);
 
       // Perform deterministic calculation of Activities budget and Total budget
       // This enforces rigorous consistency and accuracy as demanded by our guidance.
@@ -300,15 +324,16 @@ export class AIService {
     };
 
     try {
-      const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
-        contents: prompt,
-        config: {
+      const response = await callGeminiWithRetry(
+        ai,
+        "gemini-3.5-flash",
+        prompt,
+        {
           systemInstruction: "You are an expert itinerary editor. Modify the itinerary according to user prompt and return the entire updated itinerary in JSON format matching the schema.",
           responseMimeType: "application/json",
           responseSchema,
-        },
-      });
+        }
+      );
 
       const text = response.text;
       if (!text) {
@@ -414,15 +439,16 @@ export class AIService {
     };
 
     try {
-      const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
-        contents: prompt,
-        config: {
+      const response = await callGeminiWithRetry(
+        ai,
+        "gemini-3.5-flash",
+        prompt,
+        {
           systemInstruction: "You are a smart packing assistant. Analyze itinerary activities, transportation modes, temperatures/weather, and spiritual constraints to formulate a highly tailored packing list.",
           responseMimeType: "application/json",
           responseSchema,
         }
-      });
+      );
 
       const text = response.text;
       if (!text) {
