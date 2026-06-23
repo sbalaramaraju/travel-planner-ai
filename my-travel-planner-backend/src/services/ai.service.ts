@@ -26,14 +26,15 @@ async function callGeminiWithRetry(
   model: string,
   contents: any,
   config: any,
-  maxRetries = 3,
-  delayMs = 1500
+  maxRetries = 2,
+  delayMs = 1000
 ): Promise<any> {
   let attempt = 0;
+  let currentModel = model;
   while (true) {
     try {
       return await ai.models.generateContent({
-        model,
+        model: currentModel,
         contents,
         config,
       });
@@ -50,11 +51,19 @@ async function callGeminiWithRetry(
         message.includes("rate limit") ||
         message.includes("quota");
 
-      if (isTransient && attempt <= maxRetries) {
-        const backoff = delayMs * Math.pow(2, attempt - 1);
-        console.warn(`Gemini API transient failure (status: ${status}, attempt ${attempt}/${maxRetries}). Retrying in ${backoff}ms... Error: ${message}`);
-        await new Promise((resolve) => setTimeout(resolve, backoff));
-        continue;
+      if (isTransient) {
+        if (currentModel === "gemini-3.5-flash" && attempt === 1) {
+          console.warn(`Gemini 3.5 Flash experienced a transient error or high demand. Automatically falling back to Gemini 3.1 Flash Lite: ${message}`);
+          currentModel = "gemini-3.1-flash-lite";
+          continue;
+        }
+
+        if (attempt <= maxRetries) {
+          const backoff = delayMs * Math.pow(1.5, attempt - 1);
+          console.warn(`Gemini API transient failure with model ${currentModel} (status: ${status}, attempt ${attempt}/${maxRetries}). Retrying in ${backoff}ms... Error: ${message}`);
+          await new Promise((resolve) => setTimeout(resolve, backoff));
+          continue;
+        }
       }
       throw err;
     }
@@ -197,7 +206,7 @@ export class AIService {
       let text = "";
       const response = await callGeminiWithRetry(
         ai,
-        "gemini-flash-latest",
+        "gemini-3.5-flash",
         prompt,
         {
           systemInstruction: "You are a professional world-travel consultant. Rely on your vast internal knowledge base to perform accurate estimations on actual transit paths, fares, hotel rates, and sightseeing prices to build hyper-accurate and realistic estimates. Generate precise JSON that matches the required responseSchema perfectly.",
@@ -326,7 +335,7 @@ export class AIService {
     try {
       const response = await callGeminiWithRetry(
         ai,
-        "gemini-flash-latest",
+        "gemini-3.5-flash",
         prompt,
         {
           systemInstruction: "You are an expert itinerary editor. Modify the itinerary according to user prompt and return the entire updated itinerary in JSON format matching the schema.",
@@ -441,7 +450,7 @@ export class AIService {
     try {
       const response = await callGeminiWithRetry(
         ai,
-        "gemini-flash-latest",
+        "gemini-3.5-flash",
         prompt,
         {
           systemInstruction: "You are a smart packing assistant. Analyze itinerary activities, transportation modes, temperatures/weather, and spiritual constraints to formulate a highly tailored packing list.",
