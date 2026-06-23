@@ -154,6 +154,8 @@ export class AIService {
     };
 
     try {
+      let text = "";
+      try {
       const response = await ai.models.generateContent({
         model: "gemini-3.5-flash",
         contents: prompt,
@@ -164,13 +166,28 @@ export class AIService {
           tools: [{ googleSearch: {} }],
         },
       });
+      text = response.text || "";
+    } catch (groundingError: any) {
+      const errMsg = groundingError?.message || String(groundingError);
+      console.warn("Google Search Grounding experienced an error or quota limit. Falling back to standard generation for reliability:", errMsg);
+      
+      const fallbackResponse = await ai.models.generateContent({
+        model: "gemini-3.5-flash",
+        contents: prompt,
+        config: {
+          systemInstruction: "You are a professional world-travel consultant. Rely on your vast knowledge base to build highly accurate, realistic, and consistent estimates. Generate precise JSON that matches the required responseSchema perfectly.",
+          responseMimeType: "application/json",
+          responseSchema,
+        },
+      });
+      text = fallbackResponse.text || "";
+    }
 
-      const text = response.text;
-      if (!text) {
-        throw new Error("Empty response received from travel planner AI");
-      }
+    if (!text) {
+      throw new Error("Empty response received from travel planner AI");
+    }
 
-      const generatedData = JSON.parse(text);
+    const generatedData = JSON.parse(text);
 
       // Perform deterministic calculation of Activities budget and Total budget
       // This enforces rigorous consistency and accuracy as demanded by our guidance.
