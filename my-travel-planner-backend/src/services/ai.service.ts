@@ -197,7 +197,7 @@ export class AIService {
       let text = "";
       const response = await callGeminiWithRetry(
         ai,
-        "gemini-3.5-flash",
+        "gemini-flash-latest",
         prompt,
         {
           systemInstruction: "You are a professional world-travel consultant. Rely on your vast internal knowledge base to perform accurate estimations on actual transit paths, fares, hotel rates, and sightseeing prices to build hyper-accurate and realistic estimates. Generate precise JSON that matches the required responseSchema perfectly.",
@@ -326,7 +326,7 @@ export class AIService {
     try {
       const response = await callGeminiWithRetry(
         ai,
-        "gemini-3.5-flash",
+        "gemini-flash-latest",
         prompt,
         {
           systemInstruction: "You are an expert itinerary editor. Modify the itinerary according to user prompt and return the entire updated itinerary in JSON format matching the schema.",
@@ -441,7 +441,7 @@ export class AIService {
     try {
       const response = await callGeminiWithRetry(
         ai,
-        "gemini-3.5-flash",
+        "gemini-flash-latest",
         prompt,
         {
           systemInstruction: "You are a smart packing assistant. Analyze itinerary activities, transportation modes, temperatures/weather, and spiritual constraints to formulate a highly tailored packing list.",
